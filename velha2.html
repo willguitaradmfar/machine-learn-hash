@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Velha</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <script src="synaptic.js"></script>
+        <style>
+            table td {
+                border: 2px black solid;
+                width: 150px;
+                height: 150px;
+                text-align: center;
+                font-size: 92px;
+                background-color: green;
+                color: white;
+            }
+        </style>
+
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td onclick="clickiii(1, this)" id="_1"></td>
+                <td onclick="clickiii(2, this)" id="_2"></td>
+                <td onclick="clickiii(3, this)" id="_3"></td>
+            </tr>
+            <tr>
+                <td onclick="clickiii(4, this)" id="_4"></td>
+                <td onclick="clickiii(5, this)" id="_5"></td>
+                <td onclick="clickiii(6, this)" id="_6"></td>
+            </tr>
+            <tr>
+                <td onclick="clickiii(7, this)" id="_7"></td>
+                <td onclick="clickiii(8, this)" id="_8"></td>
+                <td onclick="clickiii(9, this)" id="_9"></td>
+            </tr>
+        </table>
+
+        <button onclick="limpar();">Clear</button>
+        <button onclick="maquinaJoga();">maquinaJoga</button>
+        
+        <button onclick="saveAmostrarM();">M</button>
+        <button onclick="saveAmostrarH();">H</button>
+
+    </body>
+    <script>
+
+        var draw = function () {
+            for (var i = 0; i < 9; i++) {
+                var index = parseInt(i) + 1;
+                var simbol = (estado[i] == 1 ? 'M' : (estado[i + 9] == 1 ? 'H' : ''));
+                document.querySelector("#_" + (index)).innerText = simbol;
+                document.querySelector("#_" + (index)).style = 'background-color:' + (simbol == 'H' ? 'black' : 'green') + ';';
+            }
+        };
+
+        var Neuron = synaptic.Neuron,
+                Layer = synaptic.Layer,
+                Network = synaptic.Network,
+                Trainer = synaptic.Trainer,
+                Architect = synaptic.Architect;
+
+        var hand9 = function () {
+            var bins = [];
+            if (bins.length == 0)
+                for (var i = 0; i < 9; i++) {
+                    bins.push(0);
+                }
+            for (var i in arguments) {
+                bins[arguments[i] - 1] = 1;
+            }
+
+            return bins;
+        };
+
+        var hand18 = function () {
+            var bins = estado || [];
+            if (bins.length == 0)
+                for (var i = 0; i < 18; i++) {
+                    bins.push(0);
+                }
+            for (var i in arguments) {
+                bins[arguments[i] - 1] = 1;
+            }
+
+            return bins;
+        };
+
+        var estado = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        hand18();
+
+        var jogador = 9;
+
+        var H = [];
+        var M = [];        
+
+        
+        var saveAmostrarH = function (){
+            saveAmostrar(H);
+        };
+        
+        var saveAmostrarM = function (){
+            saveAmostrar(M);
+        };
+
+        function limpar() {            
+            console.log('clear');
+            //localStorage.setItem('train', JSON.stringify([]));
+            estado = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            jogador = 9;
+            H = [];
+            M = [];
+            draw();
+        }
+
+        var maquinaJoga = function () {
+            var result = myPerceptron.activate(estado);
+
+            var maior = 0;
+            var quem = -1;
+
+            for (var i in result) {
+                if (result[i] > maior) {
+                    maior = result[i];
+                    quem = (parseInt(i) + 1);
+                }
+            }
+
+            jogador = (jogador == 0 ? 9 : 0);
+
+            hand18(quem + jogador);
+
+            draw();
+
+            maquinaAtiva = true;
+        };
+
+        function clickiii(quem) {
+
+            if (jogador == 0)
+                save(hand9(quem), H);
+            else
+                save(hand9(quem), M);
+
+            jogador = (jogador == 0 ? 9 : 0);
+
+            hand18(quem + jogador);
+
+            draw();
+
+            if (maquinaAtiva)
+                setTimeout(maquinaJoga, 1000)
+        }
+        ;
+
+        function Perceptron(input, hidden, output)
+        {
+            // create the layers
+            var inputLayer = new Layer(input);
+            var hiddenLayer = new Layer(hidden);
+            var outputLayer = new Layer(output);
+
+
+            // connect the layers
+            inputLayer.project(hiddenLayer);
+            hiddenLayer.project(outputLayer);
+
+            // set the layers
+            this.set({
+                input: inputLayer,
+                hidden: [hiddenLayer],
+                output: outputLayer
+            });
+        }
+
+        Perceptron.prototype = new Network();
+        Perceptron.prototype.constructor = Perceptron;
+
+        var myPerceptron = new Perceptron(18, 10, 9);
+
+        var error = .3;
+
+        var maquinaAtiva = false;
+
+        var save = function (target, J) {
+            console.log('active', estado.slice(0, 18));
+            console.log('propagate', target);
+
+            J.push(estado.slice(0, 18));
+            J.push(target);
+
+            console.log('done!');
+        };
+
+        var saveAmostrar = function (list) {           
+
+            var am = JSON.parse(localStorage.getItem('train') || '[]');
+
+            for (var i in list) {
+                if (list[i].length == 18) {
+                    console.log('active', list[i]);
+                    am.push(list[i]);
+                }else{
+                    console.log('propagate', list[i]);
+                    am.push(list[i]);
+                }                
+            }
+
+            console.log('qtde de amostra', am.length);
+
+            localStorage.setItem('train', JSON.stringify(am));
+
+            console.log('done!');
+        };
+
+        var train = function () {
+
+            var am = JSON.parse(localStorage.getItem('train'));
+
+            console.log('qtde de amostra', am.length);
+
+            for (var i = 0; i < 10000; i++) {
+                for (var ii = 0; ii < am.length; ii++) {
+                    if (am[ii].length == 18) {
+                        myPerceptron.activate(am[ii]);
+                    } else {
+                        myPerceptron.propagate(error, am[ii]);
+                    }
+                }
+            }
+            console.log('trained!');
+        };
+
+        train();
+    </script>
+
+</html>

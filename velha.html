@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+        <script src="synaptic.js"></script>
+
+        <style>
+            table td {
+                border: 2px black solid;
+                width: 150px;
+                height: 150px;
+                text-align: center;
+                font-size: 92px;
+                background-color: green;
+                color: white;
+            }
+        </style>
+
+
+    </head>
+    <body>
+        <div>TODO write content</div>
+
+
+        <table>
+            <tr>
+                <td onclick="clickiii(1, this)" id="_1"></td>
+                <td onclick="clickiii(2, this)" id="_2"></td>
+                <td onclick="clickiii(3, this)" id="_3"></td>
+            </tr>
+            <tr>
+                <td onclick="clickiii(4, this)" id="_4"></td>
+                <td onclick="clickiii(5, this)" id="_5"></td>
+                <td onclick="clickiii(6, this)" id="_6"></td>
+            </tr>
+            <tr>
+                <td onclick="clickiii(7, this)" id="_7"></td>
+                <td onclick="clickiii(8, this)" id="_8"></td>
+                <td onclick="clickiii(9, this)" id="_9"></td>
+            </tr>
+        </table>
+        
+        <button onclick="limpar();">Clear</button>
+        
+    </body>
+    <script>
+
+
+        var Neuron = synaptic.Neuron,
+                Layer = synaptic.Layer,
+                Network = synaptic.Network,
+                Trainer = synaptic.Trainer,
+                Architect = synaptic.Architect;
+
+        var hand9 = function () {
+            var bins = [];
+            if (bins.length == 0)
+                for (var i = 0; i < 9; i++) {
+                    bins.push(0);
+                }
+            for (var i in arguments) {
+                bins[arguments[i] - 1] = 1;
+            }
+
+            return bins;
+        };
+
+        var hand18 = function () {
+            var bins = estado || [];
+            if (bins.length == 0)
+                for (var i = 0; i < 18; i++) {
+                    bins.push(0);
+                }
+            for (var i in arguments) {
+                bins[arguments[i] - 1] = 1;
+            }
+
+            return bins;
+        };
+
+        var estado = [];
+        var cache = [];
+
+        var jogador = 9;
+
+        var amostrar = [];
+
+        console.log('myPerceptron.activate(hand18());');
+
+
+        hand18();
+
+
+        amostrar.push(estado.slice(0, 18));
+        
+        function limpar(){
+            console.log('clear');
+            hand18();
+            
+            for (var i = 0 ; i < 9 ; i++) {                
+                    var index = parseInt(i) + 1;
+                    document.querySelector("#_" + (index)).innerText = '';                    
+                    document.querySelector("#_" + (index)).style = 'background-color:green;';
+            }      
+            
+            estimar();
+        }
+
+        var amostragem = function () {
+            for (var i in amostrar) {
+                console.log(amostrar[i]);
+            }
+        };
+
+        var estimar = function () {
+            var result = myPerceptron.activate(estado.slice(0, 18));
+            console.log(result);
+            for (var i in result) {
+                if (result[i] > .5) {
+                    var index = parseInt(i) + 1;
+                    document.querySelector("#_" + (index)).style = 'background-color:red;';
+                }
+            }
+
+        };
+
+        function clickiii(quem, $this) {
+            $this.innerText = (jogador == 0 ? 'O' : 'X');
+
+            if (jogador == 9)
+                amostrar.push(hand9(quem));
+            
+            jogador = (jogador == 0 ? 9 : 0);
+            
+            hand18(quem + jogador)
+            
+            if (jogador == 9)
+                amostrar.push(estado.slice(0, 18));
+            //amostragem();
+            train();
+
+            estimar();
+        }
+        ;
+
+        function Perceptron(input, hidden, output)
+        {
+            // create the layers
+            var inputLayer = new Layer(input);
+            var hiddenLayer = new Layer(hidden);
+            var outputLayer = new Layer(output);
+
+
+            // connect the layers
+            inputLayer.project(hiddenLayer);
+            hiddenLayer.project(outputLayer);
+
+            // set the layers
+            this.set({
+                input: inputLayer,
+                hidden: [hiddenLayer],
+                output: outputLayer
+            });
+        }
+
+        Perceptron.prototype = new Network();
+        Perceptron.prototype.constructor = Perceptron;
+
+        var myPerceptron = new Perceptron(18, 10, 9);       
+        
+
+        var error = .3;
+
+        var train = function () {
+            for (var i = 0; i < 1000; i++) {
+                for (var ii = 0; ii < amostrar.length; ii++) {
+                    if (ii % 2 == 0) {
+                        //console.log('active', amostrar[ii]);
+                        myPerceptron.activate(amostrar[ii]);
+                    } else {
+                        //console.log('propagate', amostrar[ii]);
+                        myPerceptron.propagate(error, amostrar[ii]);
+                    }
+                }
+            }
+            console.log('done!');
+            localStorage.setItem('train', JSON.stringify(myPerceptron.toJSON()));
+        };
+    </script>
+
+</html>

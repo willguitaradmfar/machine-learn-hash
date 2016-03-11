@@ -1,0 +1,16 @@
+{
+  "name": "machine-learn-hash",
+  "version": "1.0.0",
+  "keywords": [
+    "util",
+    "functional",
+    "server",
+    "client",
+    "browser"
+  ],
+  "author": "will",
+  "contributors": [],
+  "dependencies": {
+    "synaptic": "^1.0.2"
+  }
+}
